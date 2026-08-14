@@ -15,25 +15,6 @@ spring:
     properties:
       hibernate:
         format_sql: true
-  security:
-    oauth2:
-      client:
-        registration:
-          school:
-            client-id: ${SCHOOL_OAUTH_CLIENT_ID:cd56665d-0a20-4e8e-966d-fac6875da82b}
-            client-secret: ${SCHOOL_OAUTH_CLIENT_SECRET}
-            authorization-grant-type: authorization_code
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-            scope: ${SCHOOL_OAUTH_SCOPES:datagsm:self_read}
-            client-name: DataGSM
-            provider: school
-        provider:
-          school:
-            # DataGSM 실제 엔드포인트 (themoment-team/datagsm-server 기준 확인됨)
-            authorization-uri: ${SCHOOL_OAUTH_AUTH_URI:https://oauth.authorization.datagsm.kr/v1/oauth/authorize}
-            token-uri: ${SCHOOL_OAUTH_TOKEN_URI:https://oauth.authorization.datagsm.kr/v1/oauth/token}
-            user-info-uri: ${SCHOOL_OAUTH_USERINFO_URI:https://oauth.resource.datagsm.kr/userinfo}
-            user-name-attribute: ${SCHOOL_OAUTH_USERNAME_ATTRIBUTE:id}
 
 app:
   jwt:
@@ -43,15 +24,12 @@ app:
     master-code: ${ADMIN_MASTER_CODE}
   cors:
     allowed-origins: ${FRONTEND_ORIGIN:http://localhost:3000}
-  frontend:
-    oauth2-redirect-uri: ${FRONTEND_OAUTH2_REDIRECT_URI:http://localhost:3000/oauth2/redirect}
-    oauth2-error-redirect-uri: ${FRONTEND_OAUTH2_ERROR_REDIRECT_URI:http://localhost:3000/login?error=true}
   oauth2:
     school:
-      # DataGSM의 AccountInfoResDto 기준. id/email은 최상위, name은 student.name처럼 중첩되어 있음
-      id-attribute: ${SCHOOL_OAUTH_ID_ATTR:id}
-      name-attribute: ${SCHOOL_OAUTH_NAME_ATTR:student.name}
-      email-attribute: ${SCHOOL_OAUTH_EMAIL_ATTR:email}
+      # datagsm-oauth-sdk-java(GSM SSO 운영팀 공식 SDK)에 넘길 클라이언트 자격증명.
+      # 인증/유저정보 엔드포인트는 SDK 기본값이 이미 실제 GSM 서버를 가리키므로 별도 설정이 없다.
+      client-id: ${SCHOOL_OAUTH_CLIENT_ID}
+      client-secret: ${SCHOOL_OAUTH_CLIENT_SECRET}
 
 server:
   port: ${SERVER_PORT:8081}

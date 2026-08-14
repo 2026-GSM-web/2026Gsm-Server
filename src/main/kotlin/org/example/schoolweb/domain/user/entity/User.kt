@@ -18,7 +18,7 @@ class User(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
-    // 학교 SSO 응답의 고유 식별자. 실제 클레임 이름은 학교 SSO 문서 확인 후 확정 필요 (OAuth2AttributeExtractor 참고)
+    // DataGSM SSO의 학생 고유 식별자(Student.id)를 문자열로 저장한다 (AuthService 참고)
     @Column(nullable = false, unique = true, length = 100)
     val oauthProviderId: String,
 

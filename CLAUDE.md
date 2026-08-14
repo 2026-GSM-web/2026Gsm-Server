@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Backend for a student council (학생회) web page. Spring Boot 4.1 + Kotlin 2.3, JPA/Hibernate over MySQL, stateless JWT auth backed by a school SSO OAuth2 login. Java 17 toolchain.
+Backend for a student council (학생회) web page. Spring Boot 4.1 + Kotlin 2.3, JPA/Hibernate over MySQL, stateless JWT auth backed by a school SSO OAuth2 login via the official `datagsm-oauth-sdk-java` SDK. Java 17 toolchain.
 
 ## Commands
 
@@ -20,11 +20,13 @@ The app requires a MySQL instance and several env vars (see below); `./gradlew b
 
 ### Required configuration (env vars, see `src/main/resources/application.yml`)
 
-- `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD` — MySQL connection (defaults point at `localhost:3306/schoolweb` with placeholder creds).
-- `JWT_SECRET` (min 256-bit base64), `JWT_EXPIRATION_MS` — issuing app JWTs.
+- `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD` — MySQL connection (defaults point at `localhost:3306/schoolweb`; username/password have no default and must be set).
+- `JWT_SECRET` (min 256-bit; the raw string is hashed as-is, not base64-decoded — see `JwtTokenProvider`), `JWT_EXPIRATION_MS` — issuing app JWTs.
 - `ADMIN_MASTER_CODE` — shared secret for the admin self-promotion endpoint.
-- `FRONTEND_ORIGIN`, `FRONTEND_OAUTH2_REDIRECT_URI`, `FRONTEND_OAUTH2_ERROR_REDIRECT_URI` — CORS + where to redirect after OAuth2 login.
-- `SCHOOL_OAUTH_CLIENT_ID`, `SCHOOL_OAUTH_CLIENT_SECRET`, `SCHOOL_OAUTH_AUTH_URI`, `SCHOOL_OAUTH_TOKEN_URI`, `SCHOOL_OAUTH_USERINFO_URI`, `SCHOOL_OAUTH_USERNAME_ATTRIBUTE`, `SCHOOL_OAUTH_ID_ATTR`, `SCHOOL_OAUTH_NAME_ATTR`, `SCHOOL_OAUTH_EMAIL_ATTR` — defaults now point at GSM's real SSO (`datagsm.kr`), with `id`/`student.name`/`email` as the userinfo claim names; override only for a different environment/tenant.
+- `FRONTEND_ORIGIN` — CORS allowed origin for the SPA.
+- `SCHOOL_OAUTH_CLIENT_ID`, `SCHOOL_OAUTH_CLIENT_SECRET` — DataGSM OAuth client credentials (from `datagsm.kr/clients`), passed straight into `DataGsmOAuthClient`. No endpoint/claim-name config needed — the SDK already targets GSM's real SSO servers and returns typed models.
+
+None of these have hardcoded fallback values in `application.yml` — every one must be set in `.env` (see `.env.example`) or the environment, or the app fails to start.
 
 ## Architecture
 
@@ -33,18 +35,20 @@ The app requires a MySQL instance and several env vars (see below); `./gradlew b
 `org.example.schoolweb` splits into:
 - `domain/<feature>/{controller,dto,entity,repository,service}` — one package per business feature (currently `user`, `suggestion`). New features should follow this same per-feature layout rather than layering by type across the whole app.
 - `global/config` — `@ConfigurationProperties` classes (auto-bound via `@ConfigurationPropertiesScan` in `SchoolwebApplication`, no explicit `@Bean` needed) plus `SecurityConfig`.
-- `global/security` / `global/security/jwt` / `global/security/oauth2` — auth pipeline.
+- `global/security` / `global/security/jwt` — JWT issuing/validation pipeline. No `global/security/oauth2` package anymore — school SSO is handled by `AuthService` (see below), not a Spring Security OAuth2 client filter chain.
 - `global/exception` — `NotFoundException`/`ForbiddenException` + `GlobalExceptionHandler` (`@RestControllerAdvice`) mapping to a uniform `ErrorResponse { status, message, fieldErrors }`.
 
 ### Auth flow (the non-obvious part)
 
-The frontend is a separate-origin SPA, so auth is stateless JWT, not session cookies:
+The frontend is a separate-origin SPA, so auth is stateless JWT, not session cookies. Login does **not** use Spring Security's `oauth2Login()` — it's a single unauthenticated API call:
 
-1. User hits the school's OAuth2 login (`/oauth2/**`, `/login/**` are `permitAll`; everything else requires authentication).
-2. `CustomOAuth2UserService` calls `OAuth2AttributeExtractor` to pull the provider's user id/name/email out of the userinfo response, using attribute-name mappings from `OAuth2ExtractionProperties` (`app.oauth2.school.*`) — this indirection was built before GSM's real claim names were confirmed; the defaults now match GSM's SSO (`id`/`student.name`/`email`), but the properties stay in place so a different school tenant/environment only needs a config override, not a code change. It then upserts a `User` via `UserService.findOrCreateFromOAuth2`.
-3. `OAuth2LoginSuccessHandler` issues a JWT (`JwtTokenProvider`) and redirects to `frontend.oauth2-redirect-uri` with the token in the URL **fragment** (`#token=...`), not a query param, so it never lands in server logs/Referer headers.
-4. `JwtAuthenticationFilter` reads `Authorization: Bearer <token>` on every request, but the JWT payload only carries the user id — role is re-looked-up from the DB per request. This is deliberate: it means an admin promotion (see below) takes effect immediately without needing to reissue a token.
-5. GSM's SSO is confirmed to be plain OAuth2 (scope `datagsm:self_read`, no `openid` scope/id_token), so `CustomOAuth2UserService` is the right integration point — no `OidcUserService` migration needed.
+1. The frontend itself redirects the user to DataGSM's SSO authorization page and receives `authCode` on its own callback route (the backend is never part of the redirect chain, unlike a typical Spring `oauth2Login()` setup).
+2. Frontend calls `POST /api/auth/login` (`permitAll`) with `{ authCode, redirectUri }`.
+3. `AuthService.loginWithSchoolOAuth` uses `DataGsmOAuthClient` (bean wired in `OAuthClientConfig`, from the official `com.github.themoment-team:datagsm-oauth-sdk-java` SDK — see https://github.com/themoment-team/datagsm-oauth-sdk-java) to call `exchangeCodeForToken(authCode, redirectUri)` then `getUserInfo(accessToken)`. The SDK returns typed `UserInfo`/`Student` models, so there's no attribute-name mapping layer to maintain (unlike a hand-rolled Spring OAuth2 client integration) — non-student accounts (`AccountObjectType.TEACHER`) are rejected, and SDK errors (`DataGsmException`) are translated to `ForbiddenException`.
+4. It upserts a `User` via `UserService.findOrCreateFromOAuth2` (keyed on the SSO `Student.id`) and returns a JWT (`JwtTokenProvider`) as a plain JSON body (`LoginResponse`) — no redirect, no URL fragment, since this is a normal synchronous API call rather than a browser-redirect OAuth2 flow.
+5. `JwtAuthenticationFilter` reads `Authorization: Bearer <token>` on every subsequent request, but the JWT payload only carries the user id — role is re-looked-up from the DB per request. This is deliberate: it means an admin promotion (see below) takes effect immediately without needing to reissue a token.
+
+Reference implementation this flow was modeled on: `team-incube/Flooding-Server-V2` (also GSM, same SDK, same "frontend owns the redirect, backend just exchanges the code" pattern).
 
 ### Roles & authorization
 

@@ -18,16 +18,23 @@ java {
 
 repositories {
     mavenCentral()
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.jetbrains.kotlin:kotlin-reflect'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
+
+    // 학교 SSO(DataGSM) 연동 - GSM SSO 운영팀(themoment-team)이 배포하는 공식 OAuth SDK.
+    // Spring Security의 oauth2Login() 표준 플로우 대신 이 SDK로 code->token->userinfo를 직접
+    // 처리한다 (AuthService 참고). 그래서 spring-boot-starter-security-oauth2-client는 더 이상
+    // 필요 없고 순수 spring-boot-starter-security만 있으면 된다.
+    implementation 'com.github.themoment-team:datagsm-oauth-sdk-java:1.6.0'
 
     runtimeOnly 'com.mysql:mysql-connector-j'
 
