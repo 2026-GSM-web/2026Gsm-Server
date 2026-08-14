@@ -1,0 +1,61 @@
+spring:
+  application:
+    name: schoolweb
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:schoolweb}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      # TODO: 스키마가 안정화되면 validate로 바꾸고 Flyway/Liquibase 마이그레이션 도입 권장
+      ddl-auto: update
+    open-in-view: false
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  security:
+    oauth2:
+      client:
+        registration:
+          school:
+            client-id: ${SCHOOL_OAUTH_CLIENT_ID:cd56665d-0a20-4e8e-966d-fac6875da82b}
+            client-secret: ${SCHOOL_OAUTH_CLIENT_SECRET}
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope: ${SCHOOL_OAUTH_SCOPES:datagsm:self_read}
+            client-name: DataGSM
+            provider: school
+        provider:
+          school:
+            # DataGSM 실제 엔드포인트 (themoment-team/datagsm-server 기준 확인됨)
+            authorization-uri: ${SCHOOL_OAUTH_AUTH_URI:https://oauth.authorization.datagsm.kr/v1/oauth/authorize}
+            token-uri: ${SCHOOL_OAUTH_TOKEN_URI:https://oauth.authorization.datagsm.kr/v1/oauth/token}
+            user-info-uri: ${SCHOOL_OAUTH_USERINFO_URI:https://oauth.resource.datagsm.kr/userinfo}
+            user-name-attribute: ${SCHOOL_OAUTH_USERNAME_ATTRIBUTE:id}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration-ms: ${JWT_EXPIRATION_MS:3600000}
+  admin:
+    master-code: ${ADMIN_MASTER_CODE}
+  cors:
+    allowed-origins: ${FRONTEND_ORIGIN:http://localhost:3000}
+  frontend:
+    oauth2-redirect-uri: ${FRONTEND_OAUTH2_REDIRECT_URI:http://localhost:3000/oauth2/redirect}
+    oauth2-error-redirect-uri: ${FRONTEND_OAUTH2_ERROR_REDIRECT_URI:http://localhost:3000/login?error=true}
+  oauth2:
+    school:
+      # DataGSM의 AccountInfoResDto 기준. id/email은 최상위, name은 student.name처럼 중첩되어 있음
+      id-attribute: ${SCHOOL_OAUTH_ID_ATTR:id}
+      name-attribute: ${SCHOOL_OAUTH_NAME_ATTR:student.name}
+      email-attribute: ${SCHOOL_OAUTH_EMAIL_ATTR:email}
+
+server:
+  port: ${SERVER_PORT:8081}
+
+logging:
+  level:
+    org.springframework.security: DEBUG
