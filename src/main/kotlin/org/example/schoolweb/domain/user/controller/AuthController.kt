@@ -4,14 +4,11 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.example.schoolweb.global.config.AdminProperties
-import org.example.schoolweb.domain.user.dto.LoginRequest
-import org.example.schoolweb.domain.user.dto.LoginResponse
 import org.example.schoolweb.domain.user.dto.PromoteRequest
 import org.example.schoolweb.domain.user.dto.PromoteResponse
 import org.example.schoolweb.domain.user.dto.UserResponse
 import org.example.schoolweb.global.exception.ForbiddenException
 import org.example.schoolweb.global.security.CustomUserPrincipal
-import org.example.schoolweb.domain.user.service.AuthService
 import org.example.schoolweb.domain.user.service.UserService
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping
@@ -20,23 +17,15 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
+// 학교 SSO 로그인 자체는 OAuthController(GET /api/auth/dg/authorize, /callback)가 처리한다.
+// 여기는 로그인 이후에 쓰는 엔드포인트(내 정보 조회, 관리자 승격)만 남아 있다.
 @RestController
 @RequestMapping("/api/auth")
-@Tag(name = "Auth", description = "학교 SSO 로그인, 내 정보 조회, 관리자 승격")
+@Tag(name = "Auth", description = "내 정보 조회, 관리자 승격")
 class AuthController(
-    private val authService: AuthService,
     private val userService: UserService,
     private val adminProperties: AdminProperties
 ) {
-
-    @PostMapping("/login")
-    @Operation(
-        summary = "학교 SSO 로그인",
-        description = "프론트가 학교 SSO 인증 후 받은 authCode와, 인증 요청 시 사용한 redirectUri를 넘기면 " +
-            "학생 계정인지 검증한 뒤 최초 로그인 시 자동 회원가입하고 JWT를 발급한다."
-    )
-    fun login(@Valid @RequestBody request: LoginRequest): LoginResponse =
-        LoginResponse(authService.loginWithSchoolOAuth(request.authCode, request.redirectUri))
 
     @GetMapping("/me")
     @Operation(summary = "내 정보 조회", description = "JWT로 인증된 현재 로그인 사용자의 정보를 반환한다.")

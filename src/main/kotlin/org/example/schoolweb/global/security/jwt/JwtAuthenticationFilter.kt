@@ -23,7 +23,11 @@ class JwtAuthenticationFilter(
         filterChain: FilterChain
     ) {
         val header = request.getHeader("Authorization")
-        val token = header?.takeIf { it.startsWith("Bearer ") }?.removePrefix("Bearer ")
+        val bearerToken = header?.takeIf { it.startsWith("Bearer ") }?.removePrefix("Bearer ")
+        // OAuthController가 로그인 성공 시 심는 httpOnly 쿠키(ACCESS_TOKEN)로도 인증할 수 있게
+        // 헤더가 없을 때 쿠키로 폴백한다.
+        val cookieToken = request.cookies?.firstOrNull { it.name == "ACCESS_TOKEN" }?.value
+        val token = bearerToken ?: cookieToken
 
         if (token != null && jwtTokenProvider.validateToken(token)) {
             userRepository.findById(jwtTokenProvider.getUserId(token)).ifPresent { user ->

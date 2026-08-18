@@ -15,6 +15,11 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  data:
+    redis:
+      # OAuth state를 짧은 TTL로 저장하는 용도 (OAuthStateStore 참고).
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
 app:
   jwt:
@@ -30,6 +35,15 @@ app:
       # 인증/유저정보 엔드포인트는 SDK 기본값이 이미 실제 GSM 서버를 가리키므로 별도 설정이 없다.
       client-id: ${SCHOOL_OAUTH_CLIENT_ID}
       client-secret: ${SCHOOL_OAUTH_CLIENT_SECRET}
+      # 백엔드 자신의 콜백 URL. 프론트가 아니라 백엔드가 리다이렉트 체인을 소유하므로 고정값이며,
+      # DG 클라이언트 콘솔(datagsm.kr/clients)에 redirect_uri로 등록돼 있어야 한다.
+      redirect-uri: ${SCHOOL_OAUTH_REDIRECT_URI}
+      # 로그인 완료(쿠키 세팅) 후 사용자를 보낼 프론트 URL. 아직 확정 전이라 기본값이 없고,
+      # 비어 있으면 GET /api/auth/dg/callback이 500으로 명확히 실패한다 - 임의로 채우지 않는다.
+      web-callback-redirect-url: ${APP_WEB_OAUTH_CALLBACK_REDIRECT_URL:}
+      state-ttl-seconds: ${OAUTH_STATE_TTL_SECONDS:300}
+      # 로컬에서 순수 http로 붙는 환경이면 false로 오버라이드(Secure 쿠키는 https에서만 브라우저가 전송함).
+      cookie-secure: ${OAUTH_COOKIE_SECURE:true}
 
 server:
   port: ${SERVER_PORT:8081}

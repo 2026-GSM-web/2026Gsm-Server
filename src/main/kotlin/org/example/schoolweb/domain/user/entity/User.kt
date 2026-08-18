@@ -18,7 +18,8 @@ class User(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
-    // DataGSM SSO의 학생 고유 식별자(Student.id)를 문자열로 저장한다 (AuthService 참고)
+    // DataGSM SSO 계정 고유 식별자(/userinfo 응답의 최상위 id, Student.id 아님)를 문자열로
+    // 저장한다 (AuthService 참고)
     @Column(nullable = false, unique = true, length = 100)
     val oauthProviderId: String,
 
