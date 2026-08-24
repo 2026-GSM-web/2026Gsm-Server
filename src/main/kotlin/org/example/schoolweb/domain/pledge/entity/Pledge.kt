@@ -2,6 +2,8 @@ package org.example.schoolweb.domain.pledge.entity
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
@@ -12,7 +14,7 @@ import org.hibernate.annotations.UpdateTimestamp
 import java.time.LocalDateTime
 
 // 공약 하나하나를 담는 항목. 전체 이행률(%)은 이 목록과 별개로 PledgeProgress 싱글턴 로우가
-// 담당하므로, 여기서는 개별 공약의 완료 여부(completed)만 관리한다.
+// 담당하므로, 여기서는 개별 공약의 진행 상태(status)만 관리한다.
 @Entity
 @Table(name = "pledges")
 class Pledge(
@@ -32,8 +34,9 @@ class Pledge(
     @Column(length = 100)
     var category: String? = null,
 
-    @Column(nullable = false)
-    var completed: Boolean = false,
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    var status: PledgeStatus = PledgeStatus.IN_PROGRESS,
 
     // 프론트에 보여줄 정렬 순서. 관리자가 드래그 정렬 등으로 직접 지정한다.
     @Column(nullable = false)

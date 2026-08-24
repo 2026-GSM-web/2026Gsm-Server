@@ -1,6 +1,7 @@
 package org.example.schoolweb.domain.pledge.dto
 
 import org.example.schoolweb.domain.pledge.entity.Pledge
+import org.example.schoolweb.domain.pledge.entity.PledgeStatus
 import java.time.LocalDateTime
 
 data class PledgeResponse(
@@ -8,7 +9,7 @@ data class PledgeResponse(
     val title: String,
     val content: String,
     val category: String?,
-    val completed: Boolean,
+    val status: PledgeStatus,
     val displayOrder: Int,
     val createdAt: LocalDateTime?,
     val updatedAt: LocalDateTime?
@@ -19,7 +20,7 @@ data class PledgeResponse(
             title = pledge.title,
             content = pledge.content,
             category = pledge.category,
-            completed = pledge.completed,
+            status = pledge.status,
             displayOrder = pledge.displayOrder,
             createdAt = pledge.createdAt,
             updatedAt = pledge.updatedAt

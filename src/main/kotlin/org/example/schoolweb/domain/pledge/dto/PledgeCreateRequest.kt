@@ -1,6 +1,8 @@
 package org.example.schoolweb.domain.pledge.dto
 
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotNull
+import org.example.schoolweb.domain.pledge.entity.PledgeStatus
 
 data class PledgeCreateRequest(
     @field:NotBlank
@@ -8,6 +10,7 @@ data class PledgeCreateRequest(
     @field:NotBlank
     val content: String,
     val category: String?,
-    val completed: Boolean,
+    @field:NotNull
+    val status: PledgeStatus,
     val displayOrder: Int
 )
