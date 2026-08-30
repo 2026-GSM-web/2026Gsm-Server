@@ -47,10 +47,12 @@ class SecurityConfig(
             authorizeHttpRequests {
                 authorize("/api/auth/dg/authorize", permitAll)
                 authorize("/api/auth/dg/callback", permitAll)
-                // 공약 이행률 조회는 프론트의 공개 페이지(비로그인 방문자도 봄)에서 쓰이므로
-                // GET만 permitAll. 수정(PUT)은 anyRequest.authenticated() + 컨트롤러의
+                // 공약 이행률/목록 조회는 프론트의 공개 페이지(비로그인 방문자도 봄)에서 쓰이므로
+                // GET만 permitAll. 생성/수정/삭제는 anyRequest.authenticated() + 컨트롤러의
                 // @PreAuthorize("hasRole('ADMIN')")로 계속 보호된다.
                 authorize(HttpMethod.GET, "/api/pledge-progress", permitAll)
+                authorize(HttpMethod.GET, "/api/pledges", permitAll)
+                authorize(HttpMethod.GET, "/api/pledges/*", permitAll)
                 authorize("/v3/api-docs/**", permitAll)
                 authorize("/swagger-ui/**", permitAll)
                 authorize("/swagger-ui.html", permitAll)
