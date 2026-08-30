@@ -10,6 +10,7 @@ data class PledgeResponse(
     val content: String,
     val category: String?,
     val status: PledgeStatus,
+    val subStatus: String?,
     val displayOrder: Int,
     val createdAt: LocalDateTime?,
     val updatedAt: LocalDateTime?
@@ -21,6 +22,7 @@ data class PledgeResponse(
             content = pledge.content,
             category = pledge.category,
             status = pledge.status,
+            subStatus = pledge.subStatus,
             displayOrder = pledge.displayOrder,
             createdAt = pledge.createdAt,
             updatedAt = pledge.updatedAt

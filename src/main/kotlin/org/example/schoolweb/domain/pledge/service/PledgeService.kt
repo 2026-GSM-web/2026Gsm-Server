@@ -29,6 +29,7 @@ class PledgeService(
                 content = request.content,
                 category = request.category,
                 status = request.status,
+                subStatus = request.subStatus,
                 displayOrder = request.displayOrder
             )
         )
@@ -42,6 +43,7 @@ class PledgeService(
         pledge.content = request.content
         pledge.category = request.category
         pledge.status = request.status
+        pledge.subStatus = request.subStatus
         pledge.displayOrder = request.displayOrder
         return PledgeResponse.from(pledge)
     }

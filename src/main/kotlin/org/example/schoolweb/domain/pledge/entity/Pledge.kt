@@ -38,6 +38,11 @@ class Pledge(
     @Column(nullable = false, length = 20)
     var status: PledgeStatus = PledgeStatus.IN_PROGRESS,
 
+    // status(3단계 이넘)와 별개로, 카드에 짧게 노출할 진행 상황 문구(예: "9월 중 도입 예정").
+    // 이넘만으로는 표현 못하는 세부 진행 상황을 관리자가 자유 텍스트로 채운다.
+    @Column(length = 255)
+    var subStatus: String? = null,
+
     // 프론트에 보여줄 정렬 순서. 관리자가 드래그 정렬 등으로 직접 지정한다.
     @Column(nullable = false)
     var displayOrder: Int = 0,
