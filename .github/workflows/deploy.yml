@@ -2,24 +2,18 @@ name: Deploy to gsmsv
 
 on:
   push:
-    branches: [main]   # 지금 develop 쓰신다면 develop으로 바꾸세요
+    branches: [main]
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          port: ${{ secrets.SSH_PORT }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /home/ubuntu/2026Gsm-Server
-            git fetch origin
-            git checkout main
-            git pull origin main
-            ./gradlew build -x test
-            sudo systemctl restart gsm-server
-            sudo systemctl status gsm-server --no-pager
+      - name: Deploy
+        run: |
+          cd /home/ubuntu/2026Gsm-Server
+          git fetch origin
+          git checkout main
+          git pull origin main
+          ./gradlew build -x test
+          sudo systemctl restart gsm-server
+          sudo systemctl status gsm-server --no-pager
