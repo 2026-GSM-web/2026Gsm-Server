@@ -69,7 +69,7 @@ class SecurityConfig(
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val config = CorsConfiguration().apply {
-            allowedOrigins = corsProperties.allowedOrigins
+            allowedOrigins = corsProperties.trimmedAllowedOrigins
             allowedMethods = listOf("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS")
             allowedHeaders = listOf("Authorization", "Content-Type")
             // ACCESS_TOKEN이 httpOnly 쿠키로 전달되므로 브라우저가 쿠키를 실어 보내려면
