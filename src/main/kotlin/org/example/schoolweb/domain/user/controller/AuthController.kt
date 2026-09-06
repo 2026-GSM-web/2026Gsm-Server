@@ -9,6 +9,7 @@ import org.example.schoolweb.domain.user.dto.PromoteResponse
 import org.example.schoolweb.domain.user.dto.UserResponse
 import org.example.schoolweb.global.exception.ForbiddenException
 import org.example.schoolweb.global.security.CustomUserPrincipal
+import org.example.schoolweb.domain.user.service.PromoteAttemptLimiter
 import org.example.schoolweb.domain.user.service.UserService
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping
@@ -24,7 +25,8 @@ import org.springframework.web.bind.annotation.RestController
 @Tag(name = "Auth", description = "내 정보 조회, 관리자 승격")
 class AuthController(
     private val userService: UserService,
-    private val adminProperties: AdminProperties
+    private val adminProperties: AdminProperties,
+    private val promoteAttemptLimiter: PromoteAttemptLimiter
 ) {
 
     @GetMapping("/me")
@@ -37,12 +39,14 @@ class AuthController(
     @PostMapping("/promote")
     @Operation(
         summary = "관리자로 승격",
-        description = "서버 관리자가 미리 알려준 마스터 코드(`ADMIN_MASTER_CODE`)를 제출하면 본인 계정을 ADMIN으로 승격한다."
+        description = "서버 관리자가 미리 알려준 마스터 코드(`ADMIN_MASTER_CODE`)를 제출하면 본인 계정을 ADMIN으로 승격한다. " +
+            "사용자당 10분에 5회로 시도 횟수가 제한되며, 초과하면 429가 반환된다."
     )
     fun promote(
         @AuthenticationPrincipal principal: CustomUserPrincipal,
         @Valid @RequestBody request: PromoteRequest
     ): PromoteResponse {
+        promoteAttemptLimiter.checkAndRecord(principal.userId)
         if (request.code != adminProperties.masterCode) {
             throw ForbiddenException("관리자 코드가 올바르지 않습니다.")
         }

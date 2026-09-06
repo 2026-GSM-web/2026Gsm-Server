@@ -25,6 +25,11 @@ class GlobalExceptionHandler {
         ResponseEntity.status(HttpStatus.FORBIDDEN)
             .body(ErrorResponse(HttpStatus.FORBIDDEN.value(), ex.message ?: "권한이 없습니다."))
 
+    @ExceptionHandler(TooManyRequestsException::class)
+    fun handleTooManyRequests(ex: TooManyRequestsException): ResponseEntity<ErrorResponse> =
+        ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+            .body(ErrorResponse(HttpStatus.TOO_MANY_REQUESTS.value(), ex.message ?: "요청이 너무 많습니다."))
+
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleValidation(ex: MethodArgumentNotValidException): ResponseEntity<ErrorResponse> {
         val fieldErrors = ex.bindingResult.fieldErrors
