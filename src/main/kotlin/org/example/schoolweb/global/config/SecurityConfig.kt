@@ -1,5 +1,6 @@
 package org.example.schoolweb.global.config
 
+import org.example.schoolweb.global.security.OriginValidationFilter
 import org.example.schoolweb.global.security.jwt.JwtAuthenticationFilter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -35,6 +36,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 @EnableMethodSecurity
 class SecurityConfig(
     private val jwtAuthenticationFilter: JwtAuthenticationFilter,
+    private val originValidationFilter: OriginValidationFilter,
     private val corsProperties: CorsProperties
 ) {
 
@@ -63,6 +65,9 @@ class SecurityConfig(
             }
         }
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
+        // Origin/Referer 검증은 인증 여부와 무관하게(쿠키가 실린 상태 변경 요청이면 무조건)
+        // 적용해야 하므로 JwtAuthenticationFilter보다도 앞에 둔다.
+        http.addFilterBefore(originValidationFilter, JwtAuthenticationFilter::class.java)
         return http.build()
     }
 
