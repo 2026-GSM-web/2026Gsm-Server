@@ -19,9 +19,12 @@ class OpenApiConfig {
                 Info()
                     .title("schoolweb API")
                     .description(
-                        "학생회 홈페이지 백엔드 API. 로그인은 학교 SSO(OAuth2, `/oauth2/authorization/school`)로 진행하고, " +
-                            "성공 시 프론트엔드 리다이렉트 URL의 `#token=...`으로 JWT가 전달된다. " +
-                            "이 JWT를 아래 Authorize 버튼에 `Bearer <token>` 형식으로 입력하면 인증이 필요한 API를 직접 호출해볼 수 있다."
+                        "학생회 홈페이지 백엔드 API. 로그인은 백엔드가 소유한 `GET /api/auth/dg/authorize`로 시작한다 " +
+                            "(Spring Security의 기본 oauth2Login 경로인 `/oauth2/authorization/school`이 아님 - " +
+                            "이 프로젝트는 oauth2Login()을 쓰지 않는다). 성공 시 JWT는 URL이 아니라 `ACCESS_TOKEN` " +
+                            "httpOnly 쿠키로 전달되므로, 브라우저에서 로그인한 뒤 이 Swagger UI로 인증이 필요한 API를 " +
+                            "호출하면 쿠키가 자동으로 실린다. 아래 Authorize 버튼(`Bearer <token>`)은 쿠키 대신 " +
+                            "직접 발급받은 JWT를 헤더로 넣어 테스트하고 싶을 때만 쓰면 된다."
                     )
                     .version("v1")
             )
