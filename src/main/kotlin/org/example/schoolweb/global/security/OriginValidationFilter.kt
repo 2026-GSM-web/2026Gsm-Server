@@ -1,6 +1,5 @@
 package org.example.schoolweb.global.security
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -10,6 +9,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
+import tools.jackson.databind.ObjectMapper
 import java.net.URI
 
 // CORS(corsConfigurationSource, SecurityConfig 참고)가 이미 명시적 origin 화이트리스트 +
@@ -25,6 +25,14 @@ import java.net.URI
 // 페이지는 커스텀 헤더를 실을 수 없고, 커스텀 헤더가 실린 요청은 그 자체로 non-simple이라 이미
 // CORS preflight를 통과해야 하기 때문이다. 이 범위를 넘어 Bearer 전용 요청까지 막으면 curl/모바일
 // 앱처럼 Origin/Referer가 없는 정상 비브라우저 클라이언트가 불필요하게 깨진다.
+// ObjectMapper는 반드시 tools.jackson.databind(Jackson 3)에서 import해야 한다 - Spring Boot
+// 4.1부터 spring-boot-starter-web이 끌어오는 자동설정(spring-boot-starter-jackson ->
+// spring-boot-jackson의 JacksonAutoConfiguration)이 tools.jackson.databind.json.JsonMapper
+// 빈만 등록하고, 예전 Jackson 2 패키지(com.fasterxml.jackson.databind.ObjectMapper)는 빈으로
+// 등록해주지 않는다. jackson-databind 2.x 자체는 jjwt-jackson/springdoc 같은 다른 라이브러리가
+// 끌어오는 전이 의존성으로 클래스패스에 여전히 존재하지만, 그 라이브러리들이 내부적으로 직접
+// 쓸 뿐 Spring 빈으로 노출되진 않는다 - com.fasterxml.jackson.databind.ObjectMapper를 생성자
+// 주입하면 NoSuchBeanDefinitionException으로 기동 자체가 실패한다(실제 운영 배포에서 재현됨).
 @Component
 class OriginValidationFilter(
     private val corsProperties: CorsProperties,
