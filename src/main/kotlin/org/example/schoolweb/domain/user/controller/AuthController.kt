@@ -40,7 +40,7 @@ class AuthController(
     @Operation(
         summary = "관리자로 승격",
         description = "서버 관리자가 미리 알려준 마스터 코드(`ADMIN_MASTER_CODE`)를 제출하면 본인 계정을 ADMIN으로 승격한다. " +
-            "사용자당 10분에 5회로 시도 횟수가 제한되며, 초과하면 429가 반환된다."
+            "사용자당 5회까지만 시도할 수 있으며, 초과하면 이후 모든 시도가 429로 영구 차단된다(자동 해제 없음)."
     )
     fun promote(
         @AuthenticationPrincipal principal: CustomUserPrincipal,
