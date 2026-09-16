@@ -56,6 +56,14 @@ app:
 server:
   port: ${SERVER_PORT:8081}
 
+# SPRINGDOC_ENABLED를 지정하지 않으면 기본값이 false라 운영에서는 꺼져 있고,
+# 로컬에서 API 문서를 보고 싶을 때만 .env에 true로 켜서 쓴다.
+springdoc:
+  api-docs:
+    enabled: ${SPRINGDOC_ENABLED:false}
+  swagger-ui:
+    enabled: ${SPRINGDOC_ENABLED:false}
+
 logging:
   level:
     org.springframework.security: DEBUG
