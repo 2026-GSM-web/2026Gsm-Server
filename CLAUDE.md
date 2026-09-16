@@ -30,6 +30,7 @@ The app requires a MySQL instance and several env vars (see below); `./gradlew b
 - `APP_WEB_OAUTH_CALLBACK_REDIRECT_URL` — frontend URL the backend 302s to after login succeeds and the cookie is set. Confirmed 2026-08-24 (민욱): `https://2026-gsm-client.vercel.app/callback`. Blank means `GET /api/auth/dg/callback` fails fast with a 500 rather than silently redirecting nowhere — that fallback stays in place for any deploy that hasn't set this yet.
 - `OAUTH_STATE_TTL_SECONDS` (optional, default `300`) — how long an `/authorize`-issued `state` stays valid in Redis before `/callback` must consume it.
 - `OAUTH_COOKIE_SECURE` (optional, default `true`) — `Secure` flag on the `ACCESS_TOKEN` cookie. Browsers only send `Secure` cookies over HTTPS, so set this to `false` for local development over plain HTTP.
+- `SPRINGDOC_ENABLED` (optional, default `false`) — gates `springdoc.api-docs.enabled`/`springdoc.swagger-ui.enabled`, i.e. whether `/v3/api-docs/**` and `/swagger-ui/**` (both `permitAll` in `SecurityConfig`) actually resolve to anything. Fixed 2026-09-16: these were previously always on with no env gate, so the full API schema was publicly reachable in production. Only set `true` locally when you need Swagger to explore the API — never in prod.
 
 None of these have hardcoded fallback values in `application.yml` (except the two `OAUTH_*` ones noted above) — every one must be set in `.env` (see `.env.example`) or the environment, or the app fails to start.
 
