@@ -55,6 +55,9 @@ class SecurityConfig(
                 authorize(HttpMethod.GET, "/api/pledge-progress", permitAll)
                 authorize(HttpMethod.GET, "/api/pledges", permitAll)
                 authorize(HttpMethod.GET, "/api/pledges/*", permitAll)
+                // springdoc.api-docs/swagger-ui.enabled(기본 false, application.yml 참고)이 꺼져
+                // 있으면 이 경로들 자체가 등록되지 않아 404가 나므로, permitAll이어도 운영에서는
+                // 노출되지 않는다. SPRINGDOC_ENABLED=true로 켠 로컬 개발 환경에서만 실제로 열림.
                 authorize("/v3/api-docs/**", permitAll)
                 authorize("/swagger-ui/**", permitAll)
                 authorize("/swagger-ui.html", permitAll)
